@@ -28,7 +28,6 @@ def draw(cycle_values_of_X):
 
 
 if __name__ == "__main__":
-
     with open('input.txt', 'r') as f:
         for line in f:
             line_list = line.split()

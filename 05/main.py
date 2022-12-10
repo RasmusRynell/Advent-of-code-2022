@@ -1,15 +1,6 @@
 import os
 import json
 
-
-
-
-
-
-
-
-
-
 stacks_p1 = []
 stacks_p2 = []
 
