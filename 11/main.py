@@ -41,8 +41,8 @@ if __name__ == "__main__":
                 opp = monkey['operation'][1]
                 rhs = int(monkey['operation'][2]) if monkey['operation'][2].isdigit() else item
 
-                new_item_level = eval_operation(lhs, opp, rhs, (lambda x: x // 3) if (part == 1) else (lambda x: x % 9699690))
-                # 9699690 is the product of 2,3,5,7,11,13,17,19 (All test numbers from input file)
+                new_item_level = eval_operation(lhs, opp, rhs, (lambda x: x // 3) if (part == 1) else (lambda x: x % 223092870))
+                # 223092870 is the product of 2,3,5,7,11,13,17,19,23 (All test numbers from input file) (23 is from the test file)
                 
                 test_eval_result = eval_test(monkey['test'], new_item_level)
                 if test_eval_result:
