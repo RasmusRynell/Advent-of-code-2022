@@ -100,24 +100,12 @@ def part2(test):
         # Add grid
         plt.grid()
 
-    candidates = []
     for idx, items in enumerate(cords):
         sensor, beacon = items
-        # Find manhattan distance
         manhattan = abs(sensor[0]-beacon[0]) + abs(sensor[1]-beacon[1])
-        print(f"Sensor: {sensor} Beacon: {beacon} Manhattan: {manhattan}", flush=True)
 
-        x = sensor[0]
-        y = sensor[1]
-        for i in range(0, manhattan + 2):
-            new_x_1 = 
-            new_y_1 = 
-            if not(new_x_1 < 0 or new_x_1 > check or new_y_1 < 0 or new_y_1 > check):
-                candidates.append((((new_x_1, new_y_1), (x,y)))
-            candidates.append((((x-manhattan)+i-1, y-i), (x,y)))
-            candidates.append((((x-manhattan)+i-1, y+i), (x,y)))
-            candidates.append((((x+manhattan)-i+1, y-i), (x,y)))
-            candidates.append((((x+manhattan)-i+1, y+i), (x,y)))
+        print(f"Sensor: {sensor} Beacon: {beacon} Manhattan: {manhattan}", flush=True)
+        cords[idx] = (sensor, beacon, manhattan)
 
         top = (sensor[0], sensor[1] + manhattan)
         bottom = (sensor[0], sensor[1] - manhattan)
@@ -125,6 +113,8 @@ def part2(test):
         right = (sensor[0] + manhattan, sensor[1])
 
         if test:
+            x = sensor[0]
+            y = sensor[1]
             # Plot sensor and beacon red and blue
             plt.scatter(sensor[0], sensor[1], color='red')
             plt.scatter(beacon[0], beacon[1], color='blue')
@@ -140,42 +130,29 @@ def part2(test):
             plt.plot([right[0], top[0]], [right[1], top[1]], color='black')
             plt.plot([right[0], bottom[0]], [right[1], bottom[1]], color='black')
 
-        cords[idx] = (sensor, beacon, manhattan)
+    total = len(cords)*(manhattan+2)*2*2
+    print(f"Total: {total}", flush=True)
 
-    print(f"candidates: {len(candidates)}", flush=True)
+    for items in cords:
+        sensor, beacon, _ = items
 
-    # for each candidate, plot yellow
-    n = 0
-    
-    for candidate in candidates:
-        ca = candidate[0]
-        p = candidate[1]
-        
-        if test:
-            # Draw line from ca to p
-            plt.plot([ca[0], p[0]], [ca[1], p[1]], color='yellow')
-
-        # Check if any candidate outside of all cords
-        ca_x = ca[0]
-        ca_y = ca[1]
-
-        if not(ca_x < 0 or ca_x > check or ca_y < 0 or ca_y > check):
-            if not is_close_enough(ca, cords):
-                #print(ca)
-                # Plot green
-                if test:
-                    plt.scatter(ca[0], ca[1], color='green')
-                print(f"Frequency {(ca_x*4000000)+ca_y}", flush=True)
-                n += 1
-
-    print(f"n: {n}", flush=True)
-
+        manhattan = abs(sensor[0]-beacon[0]) + abs(sensor[1]-beacon[1])
+        x = sensor[0]
+        y = sensor[1]
+        for i in range(0, manhattan + 2):
+            for j in range(-1, 2, 2):
+                for k in range(1, -2, -2):
+                    new_x_1 = (x-(manhattan*j))+(i*k)-1
+                    new_y_1 = y-i
+                    if not(new_x_1 < 0 or new_x_1 > check or new_y_1 < 0 or new_y_1 > check):
+                        if not is_close_enough((new_x_1, new_y_1), cords):
+                            print(f"Frequency {(new_x_1*4000000)+new_y_1}", flush=True)
+                            if test:
+                                plt.scatter(new_x_1, new_y_1, color='green')
     if test:
         plt.show()
 
 if __name__ == "__main__":
     #part1(False)
     part2(False)
-
-
 
