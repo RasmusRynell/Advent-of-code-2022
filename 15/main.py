@@ -7,9 +7,21 @@ import time
 
 plt.gca().invert_yaxis()
 
+def is_close_enough(pos, cords):
+    for sensor, beacon, manhattan in cords:
+        if abs(test[0]-sensor[0]) + abs(test[1]-sensor[1]) <= manhattan:
+            # If not a sensor or beacon
+            if test != sensor and test != beacon:
+                return True
+                # # Plot green
+                # plt.scatter(test[0], test[1], color='green')
+                # n += 1
+                # break
+    return False
+
 if __name__ == "__main__":
     cords = []
-    with open(os.path.join(os.path.dirname(__file__), 'input.txt'), 'r') as f:
+    with open(os.path.join(os.path.dirname(__file__), 'input_test.txt'), 'r') as f:
         data = f.read().split('\n')
         for line in data:
             line_split = line.split(' ')
@@ -20,9 +32,6 @@ if __name__ == "__main__":
            # print(f"Sensor: ({sensor_x}, {sensor_y}) Beacon: ({beacon_x}, {beacon_y})")
             cords.append(((int(sensor_x), int(sensor_y)), (int(beacon_x), int(beacon_y))))
 
-    #print(cords)
-
-    occupied = {}
 
     # Show all ticks
     plt.xticks(range(-50, 50, 1))
@@ -31,60 +40,49 @@ if __name__ == "__main__":
     # Add grid
     plt.grid()
 
-    i = 0
-    # Plot top left is (0, 0)
-    for sensor, beacon in cords:
-        start = time.time()
-        print(f"Sensor: {sensor} Beacon: {beacon}, {i}/{len(cords)}", flush=True)
-        # Around each sensor plot a circle
-        manhattan_distance_x = abs(sensor[0]-beacon[0])
-        manhattan_distance_y = abs(sensor[1]-beacon[1])
-        manhattan_distance = manhattan_distance_x + manhattan_distance_y
-        #print(sensor, beacon, manhattan_distance_x, manhattan_distance_y, manhattan_distance_x+manhattan_distance_y, flush=True)
-        # Plot points around sensor
-        #print(f"{sensor[0]-manhattan_distance}, {sensor[0]+manhattan_distance+1}, {sensor[1]-manhattan_distance}, {sensor[1]+manhattan_distance+1}", flush=True)
-        for x in range(sensor[0]-manhattan_distance, sensor[0]+manhattan_distance+1):
-            for y in range(sensor[1]-manhattan_distance, sensor[1]+manhattan_distance+1):
-                if abs(x-sensor[0]) + abs(y-sensor[1]) <= manhattan_distance:
-                    if (x, y) not in occupied:
-                        #occupied.append((x, y))
-                        occupied[(x, y)] = 1
-            print(f"{x}/{sensor[0]+manhattan_distance+1}", flush=True)
-        print(f"Time: {time.time()-start}", flush=True)
-        print(f"Done {i}/{len(cords)}", flush=True)
-        i += 1
+    
+    # For each sensor and beacon plot things
+    for idx, items in enumerate(cords):
+        sensor, beacon = items
+        # Find manhattan distance
+        manhattan = abs(sensor[0]-beacon[0]) + abs(sensor[1]-beacon[1])
+        print(f"Sensor: {sensor} Beacon: {beacon} Manhattan: {manhattan}")
 
-    # If any sensor or beacon is occupied, remove it
-    for sensor, beacon in cords:
-        if sensor in occupied:
-            del occupied[sensor]
-        if beacon in occupied:
-            del occupied[beacon]
+        # Plot sensor and beacon red and blue
+        plt.scatter(sensor[0], sensor[1], color='red')
+        plt.scatter(beacon[0], beacon[1], color='blue')
 
-    # Plot all occupied points in black
-    for x, y in occupied:
-        plt.plot(x, y, 'ko')
+        top = (sensor[0], sensor[1] + manhattan)
+        bottom = (sensor[0], sensor[1] - manhattan)
+        left = (sensor[0] - manhattan, sensor[1])
+        right = (sensor[0] + manhattan, sensor[1])
 
-    want_y = 10
-    # Count how many points are occupied on y = want_y
+        # Plot line between top->left,right, bottom->left,right, left->top,bottom, right->top,bottom
+        plt.plot([top[0], left[0]], [top[1], left[1]], color='black')
+        plt.plot([top[0], right[0]], [top[1], right[1]], color='black')
+        plt.plot([bottom[0], left[0]], [bottom[1], left[1]], color='black')
+        plt.plot([bottom[0], right[0]], [bottom[1], right[1]], color='black')
+        plt.plot([left[0], top[0]], [left[1], top[1]], color='black')
+        plt.plot([left[0], bottom[0]], [left[1], bottom[1]], color='black')
+        plt.plot([right[0], top[0]], [right[1], top[1]], color='black')
+        plt.plot([right[0], bottom[0]], [right[1], bottom[1]], color='black')
+
+        cords[idx] = (sensor, beacon, manhattan)
+
+    want_y = 10#2000000
+    start = time.time()
     n = 0
-    points_on_y = []
-    for x, y in occupied:
-        if y == want_y and (x, y) not in points_on_y:
+    # For each x on y = want_y
+    for x in range(-50, 50, 1):
+    #for x in range(-5_000_000, 5_000_000, 1):
+        test = (x, want_y)
+        # If close enough to a sensor
+        if is_close_enough(test, cords):
+            # Plot green
+            plt.scatter(test[0], test[1], color='green')
             n += 1
-            points_on_y.append((x, y))
-
-    print(f"Number of points occupied on y = {want_y}: {n}", flush=True)
-
-    for sensor, beacon in cords:
-        # Plot sensor in red, beacon in blue and a line between them
-        plt.plot(sensor[0], sensor[1], 'ro')
-        plt.plot(beacon[0], beacon[1], 'bo')
-        plt.plot([sensor[0], beacon[0]], [sensor[1], beacon[1]], 'k-')
 
 
-
-    print(len('#########S#######S#'), flush=True)
-
+    print(f"n: {n}", flush=True)
 
     plt.show()
