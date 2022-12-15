@@ -133,7 +133,7 @@ def part2(test):
     total = len(cords)*(manhattan+2)*2*2
     print(f"Total: {total}", flush=True)
 
-    for items in cords:
+    for items in cords[::-1]:
         sensor, beacon, _ = items
 
         manhattan = abs(sensor[0]-beacon[0]) + abs(sensor[1]-beacon[1])
@@ -149,10 +149,15 @@ def part2(test):
                             print(f"Frequency {(new_x_1*4000000)+new_y_1}", flush=True)
                             if test:
                                 plt.scatter(new_x_1, new_y_1, color='green')
+                            return
     if test:
         plt.show()
 
 if __name__ == "__main__":
     #part1(False)
+    
+    start = time.time()
     part2(False)
+    end = time.time()
+    print(f"Time: {end-start}", flush=True)
 
