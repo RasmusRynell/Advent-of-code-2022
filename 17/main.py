@@ -14,22 +14,6 @@ plt.ion()
 
 rocks = ['-', '+', 'J', 'l', 'o']
 
-def get_index_of_rock(rock_char):
-    return rocks.index(rock_char) + 1
-
-def get_starting_y(stack):
-    # In all of stack in what row is the last non-zero element
-    for y in range(2022*4-1, -1, -1):
-        for x in range(7):
-            if stack[y][x] != 0:
-                return y + 4
-    return 3
-
-def overlap_with_stack(stack, rock):
-    for x,y in rock:
-        if stack[y][x] != 0:
-            return True
-    return False
 
 def make_rock(rock_char, x, y):
     if rock_char == '-':
@@ -44,65 +28,51 @@ def make_rock(rock_char, x, y):
         return [[x,y], [x+1,y], [x,y+1], [x+1,y+1]]
 
 def push_rock(rock, stream):
-    old_rock = rock
-    if stream == '>':
-        rock = [[x+1,y] for x,y in rock]
-    elif stream == '<':
-        rock = [[x-1,y] for x,y in rock]
+    for x,y in rock:
+        new_x = x+stream
+        if not (new_x < 7 and new_x >= 0):
+            return rock
+        string = (y,new_x)
+        if string in stack and stack[string] != 0:
+            return rock
+    return [[x+stream,y] for x,y in rock]
 
-    # check if rock is out of bounds
-    if any([x < 0 or x > 6 for x,y in rock]):
-        return old_rock
-
-    # check if rock is overlapping with stack
-    if overlap_with_stack(stack, rock):
-        return old_rock
-
-    return rock
 
 def move_down(rock):
-    old_rock = rock
-    rock = [[x,y-1] for x,y in rock]
+    for x,y in rock:
+        string = (y-1,x)
+        if string in stack and stack[string] != 0:
+            return rock
+    return [[x,y-1] for x,y in rock]
 
-    # check if rock is out of bounds
-    if any([y < 0 for x,y in rock]):
-        return old_rock
-
-    # check if rock is overlapping with stack
-    if overlap_with_stack(stack, rock):
-        return old_rock
-
-    return rock
-
-def draw(stack, rock, delay=0.1):
-    # Plot stack
-    plt.clf()
-    plt.imshow(stack[0:25,:])
-
-    # Plot rock
-    for x,y in current_rock:
-        plt.scatter(x, y, color='red')
-
-    plt.pause(delay)
-    plt.draw()
 
 if __name__ == "__main__":
     with open(os.path.join(os.path.dirname(__file__), 'input.txt'), 'r') as f:
         jet_stream = f.read()
 
+    # In jet stream convert '>' into 1 and '<' into -1
+    jet_stream = [1 if x == '>' else -1 for x in jet_stream]
+
     stack = np.zeros((2022*4, 7))
-    total_rocks = 2022
+    stack = {}
 
-    #print(jet_stream, flush=True)
+    push_rock_times = []
+    move_rock_down_times = []
 
+    top_y = -1
+
+    should_check_floor = True
+
+    start = time.time()
     j = 0
-    for i in range(0, 2022):
+    time_steps = 2022#10_000_0#2022
+    for i in range(0, time_steps):
         x = 2
-        y = get_starting_y(stack)
+        y = top_y + 4
+
         #print(x, y, flush=True)
         current_rock_char = rocks[i%len(rocks)]
         current_rock = make_rock(current_rock_char, x, y)
-        #draw(stack, current_rock)
 
         while True:
             current_stream = jet_stream[j%len(jet_stream)]
@@ -110,27 +80,56 @@ if __name__ == "__main__":
 
             # Move rock side to side
             #print(f"Rock pushed {current_stream}", flush=True)
+            timer3 = time.time()
             current_rock = push_rock(current_rock, current_stream)
-
-            #draw(stack, current_rock)
-
+            push_rock_times.append(time.time() - timer3)
             # Move rock down
+            timer4 = time.time()
             old_curr = current_rock
-            current_rock = move_down(current_rock)
-
-            #draw(stack, current_rock)
+            if y != 0:
+                current_rock = move_down(current_rock)
+                y -= 1
+            move_rock_down_times.append(time.time() - timer4)
 
             if current_rock == old_curr:
                 # Rock is at the bottom
                 # Add rock to stack
                 for x,y in current_rock:
-                    stack[y][x] = get_index_of_rock(current_rock_char)
+                    stack[(y, x)] = rocks.index(current_rock_char) + 1
+                    if y > top_y:
+                        top_y = y
                 break
 
-    # Current height of stack
-    height = get_starting_y(stack)
-    print(f"Stack height: {height-3}", flush=True)
+    full_time = time.time() - start
 
-    #plt.ioff()
-    #plt.imshow(stack[0:height,:])
-    #plt.show()
+    # Current height of stack
+    print(f"Stack height: {top_y+1}", flush=True)
+    print(f"Total time:\t\t {full_time*1000}ms", flush=True)
+    print()
+
+    # Print avr time all in ms
+    print(f"Push rock left, right:\t {sum(push_rock_times)*1000:.4f}ms, {len(push_rock_times)}", flush=True)
+    print(f"Move rock down:\t\t {sum(move_rock_down_times)*1000:.4f}ms, {len(move_rock_down_times)}", flush=True)
+    total_sum = sum(push_rock_times)*1000 + sum(move_rock_down_times)*1000
+    print(f"Sum: \t\t\t {total_sum:.4f}ms", flush=True)
+    print(f"% of time:\t\t {total_sum/(full_time*1000)*100:.4f}%", flush=True)
+    print()
+
+    # Same thing but relative to time_steps
+    print(f"Push rock left, right:\t {sum(push_rock_times)*1000/time_steps:.4f}ms", flush=True)
+    print(f"Move rock down:\t\t {sum(move_rock_down_times)*1000/time_steps:.4f}ms", flush=True)
+    print(f"Sum: \t\t\t {(sum(push_rock_times)*1000 + sum(move_rock_down_times)*1000)/time_steps:.4f}ms", flush=True)
+    print(f"Total time:\t\t {full_time*1000/time_steps}ms", flush=True)
+
+
+
+    print(f"\nTotal time:\t\t {full_time}s", flush=True)
+
+    # Running this for 1000000000000 iterations instead of time_steps will take ... hours
+    seconds = full_time * 1000000000000 / time_steps
+    print(f"\nTime to run part2:\t {seconds/60/60:.2f}h", flush=True)
+
+
+    print(len(jet_stream))
+    print(len(rocks))
+    print(len(jet_stream)%len(rocks))
