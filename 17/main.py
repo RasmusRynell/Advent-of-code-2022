@@ -46,6 +46,21 @@ def move_down(rock):
     return [[x,y-1] for x,y in rock]
 
 
+def are_same(half, top_y):
+    for y in range(top_y-1, top_y-1-half, -1):
+        for x in range(0, 7):
+            string1 = (y,x)
+            string2 = (y+half, x)
+            # If both strings are in the stack
+            if string1 in stack and string2 in stack:
+                if stack[string1] != stack[string2]:
+                    return False
+            # If only one string is in the stack
+            elif string1 in stack or string2 in stack:
+                return False
+    return True
+
+
 if __name__ == "__main__":
     with open(os.path.join(os.path.dirname(__file__), 'input.txt'), 'r') as f:
         jet_stream = f.read()
@@ -53,7 +68,6 @@ if __name__ == "__main__":
     # In jet stream convert '>' into 1 and '<' into -1
     jet_stream = [1 if x == '>' else -1 for x in jet_stream]
 
-    stack = np.zeros((2022*4, 7))
     stack = {}
 
     push_rock_times = []
@@ -61,11 +75,9 @@ if __name__ == "__main__":
 
     top_y = -1
 
-    should_check_floor = True
-
     start = time.time()
     j = 0
-    time_steps = 2022#10_000_0#2022
+    time_steps = 10_000_0#2022
     for i in range(0, time_steps):
         x = 2
         y = top_y + 4
@@ -100,7 +112,25 @@ if __name__ == "__main__":
                         top_y = y
                 break
 
+        # Find if pattern repeats
+        if top_y > 2:
+            if are_same(top_y//2, top_y):
+                print("Repeats", flush=True)
+
+                # Print stack
+                for y in range(0, top_y+1):
+                    for x in range(0, 7):
+                        string = (y,x)
+                        if string in stack:
+                            print(stack[string], end='')
+                        else:
+                            print(' ', end='')
+                    print()
+                break
+
     full_time = time.time() - start
+
+    print("\n\n\n\nStats:")
 
     # Current height of stack
     print(f"Stack height: {top_y+1}", flush=True)
@@ -128,8 +158,3 @@ if __name__ == "__main__":
     # Running this for 1000000000000 iterations instead of time_steps will take ... hours
     seconds = full_time * 1000000000000 / time_steps
     print(f"\nTime to run part2:\t {seconds/60/60:.2f}h", flush=True)
-
-
-    print(len(jet_stream))
-    print(len(rocks))
-    print(len(jet_stream)%len(rocks))
