@@ -6,10 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-plt.ion()
-
 def is_inside_testing_zone(pos, min_x, max_x, min_y, max_y, min_z, max_z):
-    return min_x-2 <= pos[0] <= max_x+2 and min_y-2 <= pos[1] <= max_y+2 and min_z-2 <= pos[2] <= max_z+2
+    return min_x-1 <= pos[0] <= max_x+1 and min_y-1 <= pos[1] <= max_y+1 and min_z-1 <= pos[2] <= max_z+1
 
 def get_neighbor(pos):
     neighbor = []
@@ -21,12 +19,10 @@ def get_neighbor(pos):
 
 def get_outside(blocks, min_x, max_x, min_y, max_y, min_z, max_z):
     outside = []
-    curr = (min_x-1, min_y-1, min_z-1)
+    curr = (min_x, min_y, min_z)
     frontier = [curr]
     while len(frontier) > 0:
         curr = frontier.pop(0)
-        if curr[0] > max_x+2 and curr[1] > max_y+2 and curr[2] > max_z+2:
-            print(f"Something is wrong: {curr}", flush=True)
         if curr not in outside:
             outside.append(curr)
             for neighbor in get_neighbor(curr):
@@ -53,10 +49,13 @@ if __name__ == "__main__":
     print(f"min_y = {min_y}, max_y = {max_y}", flush=True)
     print(f"min_z = {min_z}, max_z = {max_z}", flush=True)
 
+
     outside = get_outside(blocks, min_x, max_x, min_y, max_y, min_z, max_z)
     print(f"Outside: {len(outside)}", flush=True)
+    total_size = (max_x-min_x+1)*(max_y-min_y+1)*(max_z-min_z+1)
+    print(f"Inside: {total_size-len(outside)}", flush=True)
+    print(f"Total size: {total_size}", flush=True)
 
-    print((2,2,5) in outside)
 
     # For all blocks, check how many sides are exposed
     total = 0
